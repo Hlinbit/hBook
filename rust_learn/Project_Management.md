@@ -70,6 +70,74 @@ use crate::tools::add::fn_add;
 ```
 
 
-## Dependency
+## Cargo.toml"Introduction
 
-A project usually depend some third-party libraries. The file `Cargo.toml` is the handle to manage the dependencies.
+"Cargo.toml" is an important file used for managing project dependencies and build configurations in the Rust programming language. It is a plain text file that is typically located in the project's root directory.
+
+In the "Cargo.toml" file, you can specify the
+* **project's name**, 
+* **version number**,  
+* **author information**, 
+* **dependencies**,
+* **configuration for building and testing**, 
+
+among other information. This information is used for building and managing Rust projects.
+
+### Package information in cargo.toml
+
+```
+[package]
+name = "test"
+version = "0.1.0"
+authors = ["Lei Hou <hlinbit@yeah.net>"]
+edition = "2021"
+```
+
+The `[package]` part config the project name, version, author, and rust version for the project.
+
+
+### Dependency in cargo.toml
+
+```
+riscv = { git = "https://github.com/rcore-os/riscv", features = ["inline-asm"] }
+virtio-drivers = { git = "https://github.com/rcore-os/virtio-drivers", rev = "4ee80e5" }
+toolbox = { path = "../toolbox" }
+log = "0.4"
+sbi-rt = { version = "0.0.2", features = ["legacy"] }
+```
+
+The example shows five different dependency condition.
+
+The first one imports a dependency called riscv. The given GitHub link specifies the location of the dependency library for Rust. `features = ["inline-asm"]` specifies that the project use the `inline-asm` feature in the dependency. 
+
+
+`virtio-drivers` is the second dependency. 
+The given GitHub link specifies the location of the dependency library for Rust, and it also provides the commit hash code to specify the version of the dependency.
+
+`toolbox` is a local dependency. To import external dependencies, specify the path where the dependencies are located. The external dependencies must have the "name" attribute set to "toolbox" in `[package]`.
+
+`sbi-rt` and `log` are available on the crates.io registry. Crates.io is the default package registry for Rust, where you can find and share Rust crates/libraries. And we use the feature `legacy` of `sbi-rt`.
+
+### Profile in cargo.toml
+
+In the Cargo.toml file of a Cargo project, you can define profiles for different build configurations. Common configurations include `[profile.dev]` (for development/debug build settings) and `[profile.release]` (for release build settings).
+
+These configurations allow you to define build options such as optimization level, enabling or disabling debug information, code generation options, and more.
+
+This is an example:
+
+```
+[profile.release]
+opt-level = 3
+debug = false
+panic = 'abort'
+rpath = true
+```
+
+* `opt-level = 3` indicates setting the optimization level to 3, which enables a higher degree of optimization to generate higher-performance code.
+
+* `debug = false` means disabling the generation of debug information to reduce the size of the executable file.
+
+* `rpath = true` signifies enabling runtime library path lookup, allowing the executable file to correctly find the dependencies' dynamic libraries at runtime.
+
+* `panic = 'abort'` configures the panic option as "abort". This means that in a release build, when a panic occurs, the program will immediately terminate without performing backtraces and stack unwinding operations.
