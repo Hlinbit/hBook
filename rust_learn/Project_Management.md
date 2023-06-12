@@ -141,3 +141,86 @@ rpath = true
 * `rpath = true` signifies enabling runtime library path lookup, allowing the executable file to correctly find the dependencies' dynamic libraries at runtime.
 
 * `panic = 'abort'` configures the panic option as "abort". This means that in a release build, when a panic occurs, the program will immediately terminate without performing backtraces and stack unwinding operations.
+
+### `Feature` in cargo.toml
+
+The features section in `Cargo.toml` allows you to define and enable optional features for your crate.
+
+Optional features provide a way to include or exclude certain parts of your crate's functionality. By defining features, you can create different combinations of dependencies or enable specific code paths based on user preferences or specific use cases.
+
+This is an example:
+
+First, let's set up the project structure:
+
+```
+my_crate/
+  |- src/
+      |- main.rs
+  |- Cargo.toml
+```
+Inside the Cargo.toml file, you define the dependencies and features:
+```
+[package]
+name = "my_crate"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.8"
+
+[features]
+bubble_sort = [] # No additional dependencies for bubble_sort
+quick_sort = ["rand"] # quick_sort depends on the `rand` crate
+```
+
+Now, in the src/main.rs file, you can conditionally include the sorting algorithms based on the enabled features:
+
+```
+#[cfg(feature = "bubble_sort")]
+mod sorting {
+    pub fn sort(data: &mut [i32]) {
+        // Bubble Sort implementation
+        // ...
+    }
+}
+
+#[cfg(feature = "quick_sort")]
+mod sorting {
+    extern crate rand;
+
+    use rand::Rng;
+
+    pub fn sort(data: &mut [i32]) {
+        // Quick Sort implementation
+        // ...
+    }
+}
+
+fn main() {
+    let mut data = [5, 2, 9, 1, 3];
+    
+    #[cfg(feature = "bubble_sort")]
+    sorting::sort(&mut data);
+
+    #[cfg(feature = "quick_sort")]
+    sorting::sort(&mut data);
+    
+    println!("Sorted data: {:?}", data);
+}
+
+```
+
+In this example, we have two modules inside the sorting module, each corresponding to a specific sorting algorithm. The `bubble_sort` module is enabled when the `bubble_sort` feature is enabled, and the `quick_sort `module is enabled when the `quick_sort` feature is enabled.
+
+Inside the main function, we conditionally call the sort function based on the enabled features. So, when you build the project with different features, the appropriate sorting algorithm will be used.
+
+To build the project with the bubble_sort feature, use the following command:
+
+```
+cargo build --features bubble_sort
+```
+
+To build the project with the quick_sort feature, use the following command:
+```
+cargo build --features quick_sort
+```
