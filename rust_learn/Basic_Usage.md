@@ -1,75 +1,124 @@
-# Sturcture of a rust project
+# basic type
 
-## The Beginning of the Rust project
+## Option
 
-You can initialize a rust project by using:
 
-```
-cargo init
-```
-
-## Source Code
-
-### Crate and Module
-
-Source code is laid in the directory 'src'. And you can write your code in the src. And the content in 'src' is a crate.
-
-For a professional programer, different model for diffrent functions should be divided into different directories. 
-
-In Rust, a directory is considered a module, and you can use a 'mod.rs' file to control which functions, traits, or structs can be referenced by other modules in the project.
-
-Assuming that you develop some tool functions for main.rs, you can write a line to references the function fn_add:
+### definition
+Option is an enumeration type in the Rust language, and its definition is as follows:
 
 ```
-mod tools
-use crate::tools::fn_add
-```
-
-`mod tools` is for declaring the module in the file, and `use crate::tools::fn_add` is for import the function to be used.
-
-And the `fn_add` must use be a public function with 'pub' at the beginning of definition in file 'tools/mod.rs'.
-
-```
-pub fn fn_add (a: i32, b: i32) -> i32 {
-    a + b
+enum Option<T> {
+    None,
+    Some(T),
 }
 ```
 
-### Module Group
+It is used to represent a value that may either exist (wrapped in Some) or not exist (None).
 
-In Rust, a module can contain multiple sub-modules. For example, a module named 'tools' can include sub-modules named 'add' and 'div'. The content of these sub-modules is defined in separate files named 'add.rs' and 'div.rs', respectively. It is important to ensure that the name of the module is consistent with the name of its corresponding file.
+### exemple
 
-You can declare the contained modules in 'tools/mod.rs'.
-
-```
-mod div;
-mod add;
-
-pub use add::fn_add;
-pub use add::fn_div;
-```
-
-And you can reference the `fn_add` in 'main.rs' by 
-```
-mod tools;
-use crate::tools::fn_add;
-```
-
-The following combination is also possible.
+In this example, we can see that Rust provides a user-friendly way to handle the unexpected result value.
 
 ```
-// tools/mod.rs
-pub mod div;
-pub mod add;
-```
+fn find_element_index(vec: Vec<i32>, elem: i32) -> Option<usize> {
+    for (index, &item) in vec.iter().enumerate() {
+        if item == elem {
+            return Some(index);
+        }
+    }
+    None
+}
+
+fn main() {
+    let vec = vec![10, 20, 30, 40, 50];
+    match find_element_index(vec, 30) {
+        Some(index) => println!("Element found at index {}", index),
+        None => println!("Element not found in vec"),
+    }
+}
 
 ```
-// main.rs
-mod tools;
-use crate::tools::add::fn_add;
+
+Another example demonstrates the usage of the specific method `take()` for `Option`. take() returns an `Option` value, and the original value is set to `None`.
+```
+struct Container {
+    value: Option<String>,
+}
+
+impl Container {
+    fn new() -> Self {
+        Container { value: None }
+    }
+    
+    fn set_value(&mut self, value: String) {
+        self.value = Some(value);
+    }
+    
+    fn take_value(&mut self) -> Option<String> {
+        self.value.take()
+    }
+}
+
+fn main() {
+    let mut container = Container::new();
+    container.set_value("Hello, world!".to_string());
+    let value = container.take_value();
+    println!("Taken value: {:?}", value);
+    println!("Container value: {:?}", container.value);
+}
+
+\\ result:
+\\ Taken value: Some("Hello, world!")
+\\ Container value: None
+```
+## Struct
+
+### Struct in rust
+
+In Rust, a struct is a custom data type that allows you to group together related data fields. It is similar to a class in object-oriented programming languages, but without the inheritance and polymorphism features.
+
+You can control the visibility of the fields in a struct by using the pub keyword. If you mark a field as pub, it can be accessed from outside the module in which the struct is defined. If you don't mark a field as pub, it is private by default and can only be accessed within the module.
+
+### #[repr(C)] with a struct
+
+In Rust, the #[repr(C)] attribute is used to specify the memory layout of a struct or enum in a way that is compatible with the C programming language.
+
+```
+#[repr(C)]
+struct Point {
+    x: i32,
+    y: i32,
+}
 ```
 
+The use of #[repr(C)] is crucial for coding in assembly language, as it allows you to access the fields of a struct using address offsets. 
 
-## Dependency
+Without #[repr(C)], using address offsets to index struct fields can lead to mistakes and errors, making it difficult to work with low-level code.
 
-A project usually depend some third-party libraries. The file `Cargo.toml` is the handle to manage the dependencies.
+
+### #[derive] with a struct
+
+In Rust, the `#[derive()]` attribute is used to automatically implement common traits for a struct or an enum.
+
+For example, the Copy and Clone traits are used to enable copying and cloning of values. 
+
+The Ord, PartialOrd, Eq, and PartialEq traits are used for value comparison and ordering. 
+
+```
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn main() {
+    let p1 = Point { x: 10, y: 20 };
+    let p2 = p1.clone();
+    
+    println!("p1 == p2: {}", p1 == p2);
+    println!("p1 < p2: {}", p1 < p2);
+    println!("p1 > p2: {}", p1 > p2);
+}
+```
+
+However, the comparison functions generated by rust compiler may not meet our demand. We can rewrite those function in `Ord, PartialOrd, Eq, and PartialEq`.
