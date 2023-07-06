@@ -1,0 +1,39 @@
+# Closure in Rust
+
+In Rust, closures are functions that can capture their surrounding environment. They can be understood as callable objects that can be used anywhere a function is required.
+
+## Basic Closure Definition
+
+This is a simple example of closures in Rust. The closure captures variable `x`, and caculate the sum of `a`, `b` and `x`. Variable `a` and `b` can be regarded as the inputs of closure `add`. In this example `add` is of type `Fn(i32, i32) -> i32`.
+
+```
+let x = 1;
+let add = |a, b| a + b + x;
+println!("{}", add(2,3));
+```
+
+## Use Closure in iterator
+
+Using closures in combination with iterators of containers can achieve the effect of traversing the entire container, which allows us to write more concise and elegant code.
+
+This is an example:
+
+```
+let numbers = vec![1,3,4,5,6];
+let squares: Vec<_> = numbers.iter().map(|x| x * x).collect();
+println!("{:?}", squares);
+```
+The `map` definition is as following:
+```
+fn map<B, F>(self, f: F) -> Map<Self, F>
+where
+    Self: Sized,
+    F: FnMut(Self::Item) -> B,
+{
+    Map::new(self, f)
+}
+```
+It takes a variable with type `FnMut(Self::Item) -> B`. Here, `Self::Item` refers to the type of element produced by the iterator that the map method is being called on. And `B` is inferred by rust compiler. If the closure return a variable with type `String`, `B` is `String`. In this example, `B` is `i32`.
+
+The closure `|x| x * x` is the input of `map()`. The closure is invoked in `map()` with each element in the `Vec` serving as input. The result `squares` is a new `Vec`, containing the square of each element.
+

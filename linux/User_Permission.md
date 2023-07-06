@@ -69,7 +69,7 @@ sudo usermod -g groupname username
 In order for the configuration to take effect, logging out and loging back in.
 
 
-# Change File Access Permission for An User
+# Change File Access Permission
 
 Change access permission for a file/directory. The permission is set to `-rw-rw-rw-` or `drw-rw-rw-`.
 ```
