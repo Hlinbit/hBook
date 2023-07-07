@@ -12,7 +12,7 @@ let add = |a, b| a + b + x;
 println!("{}", add(2,3));
 ```
 
-## Use Closure in iterator
+## Use Closure for Iterator
 
 Using closures in combination with iterators of containers can achieve the effect of traversing the entire container, which allows us to write more concise and elegant code.
 
@@ -37,3 +37,83 @@ It takes a variable with type `FnMut(Self::Item) -> B`. Here, `Self::Item` refer
 
 The closure `|x| x * x` is the input of `map()`. The closure is invoked in `map()` with each element in the `Vec` serving as input. The result `squares` is a new `Vec`, containing the square of each element.
 
+# Use closure as a function input
+
+In many scenarios, we need to pass a function as an argument to another function. Rust provides good support for this usage pattern.
+
+This is two examples for `FnOnce`:
+```
+fn apply<F>(f: F) where F: FnOnce() {
+    f();
+}
+
+fn main() {
+    let count = 0;
+    let print_count = || {
+        println!("Count: {}", count);
+    };
+
+    apply(&print_count);
+}
+```
+
+```
+fn apply_once<F>(f: F) where F: FnOnce() {
+    f();
+}
+
+fn main() {
+    let mut message = "Hello".to_string();
+    let change_message = || {
+        message.push_str(", world!");
+    };
+
+    apply_once(change_message);
+
+    println!("{}", message); // 输出 "Hello, world!"
+}
+```
+
+`FnOnce` can only be invoked once in `apply`. It has the flexibility to either modify the variable in the environment or not.
+
+This is an example for `Fn`:
+```
+fn apply<F>(f: F) where F: Fn() {
+    f();
+    f();
+    f();
+}
+
+fn main() {
+    let count = 0;
+    let print_count = || {
+        println!("Count: {}", count);
+    };
+
+    apply(&print_count);
+}
+```
+The difference between `Fn` and `FnOnce` is that We can call or not call a closure of type `Fn`, but we cannot do the same with a closure of type `FnOnce`. And `Fn` cannot modify the value of any variable in the environment.
+
+This is an example for `FnMut`:
+
+```
+fn apply<F>(mut f: F) where F: FnMut() {
+    f();
+}
+
+fn main() {
+    let mut count = 0;
+    let mut increment = || {
+        count += 1;
+    };
+
+    apply(&mut increment);
+    apply(&mut increment);
+    apply(&mut increment);
+
+    println!("Count: {}", count); // Output "Count: 3"
+}
+```
+
+The distinction between `FnMut` and `Fn` is that `FnMut` is capable of modifying the captured variable's value within the environment, whereas `Fn` cannot. And `FnMut` can be called 0 or multiple times.
