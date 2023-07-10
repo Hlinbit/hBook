@@ -1,9 +1,15 @@
 @startuml
-participant Object1
-participant Object2
-
-Object1 -> Object2: Message1
-activate Object2
-Object2 --> Object1: Message2
-deactivate Object2
+start
+:Initialize variables;
+if (Condition) then (true)
+  :Process A;
+  if (Another Condition) then (true)
+    :Process B;
+  else (false)
+    :Process C;
+  endif
+else (false)
+  :Process D;
+endif
+stop
 @enduml
