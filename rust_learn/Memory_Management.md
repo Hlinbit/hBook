@@ -147,6 +147,139 @@ The implementation of `Rc::clone` doesn’t make a deep copy of all the data lik
 
 Interior mutability is a design pattern in Rust that allows you to mutate data even when there are immutable references to that data; normally, this action is disallowed by the borrowing rules. To mutate data, the pattern uses unsafe code inside a data structure to bend Rust’s usual rules that govern mutation and borrowing. 
 
+With references and `Box<T>`, the borrowing rules’ invariants are enforced at compile time. With `RefCell<T>`, these invariants are enforced at runtime. With references, if you break these rules, you’ll get a compiler error. With `RefCell<T>`, if you break these rules, your program will panic and exit.
+
+Here is a recap of the reasons to choose Box<T>, Rc<T>, or RefCell<T>:
+
+- `Rc<T>` enables multiple owners of the same data; `Box<T>` and `RefCell<T>` have single owners.
+- Box<T> allows immutable or mutable borrows checked at compile time; `Rc<T>` allows only immutable borrows checked at compile time; `RefCell<T>` allows immutable or mutable borrows checked at runtime.
+- Because `RefCell<T>` allows mutable borrows checked at runtime, you can mutate the value inside the `RefCell<T>` even when the `RefCell<T>` is immutable.
+
+
+##  Creating immutable and mutable references from `RefCell<T>`
+
+When creating immutable and mutable references, we use the & and &mut syntax, respectively. With `RefCell<T>`, we use the  `borrow` and `borrow_mut` methods, which are part of the safe API that belongs to `RefCell<T>`. 
+
+The `RefCell<T>` keeps track of how many `Ref<T>` and `RefMut<T>` smart pointers are currently active. Every time we call borrow, the `RefCell<T>` increases its count of how many immutable borrows are active. When a `Ref<T>` value goes out of scope, the count of immutable borrows goes down by one. Just like the compile-time borrowing rules, `RefCell<T>` lets us have many immutable borrows or one mutable borrow at any point in time.
+
+This is an example. `LimitTracker` is tracker for The ratio of input value and the max value. If the ratio reach a threshold, `Messenger` will send message to somewhere. To test the correctness of logic in `LimitTracker` in a local environment, we can mock a `Messenger` instance. 
+```rust
+pub trait Messenger {
+    fn send(&self, msg: &str);
+}
+
+pub struct LimitTracker<'a, T: Messenger> {
+    messenger: &'a T,
+    value: usize,
+    max: usize,
+}
+
+impl<'a, T> LimitTracker<'a, T>
+where
+    T: Messenger,
+{
+    pub fn new(messenger: &'a T, max: usize) -> LimitTracker<'a, T> {
+        LimitTracker {
+            messenger,
+            value: 0,
+            max,
+        }
+    }
+
+    pub fn set_value(&mut self, value: usize) {
+        self.value = value;
+
+        let percentage_of_max = self.value as f64 / self.max as f64;
+
+        if percentage_of_max >= 1.0 {
+            self.messenger.send("Error: You are over your quota!");
+        } else if percentage_of_max >= 0.9 {
+            self.messenger
+                .send("Urgent warning: You've used up over 90% of your quota!");
+        } else if percentage_of_max >= 0.75 {
+            self.messenger
+                .send("Warning: You've used up over 75% of your quota!");
+        }
+    }
+}
+```
+
+The `MockMessenger` contains a vector for storing the messages to be sent.
+And invoking `send` means pushing a new message into `sent_messages`. 
+
+However rust prevent the implementation. Because the `send` is defined as `fn send(&self, msg: &str);`. `self` is immutable, thus, we cannot modify the member `sent_messages` in `self`. In this case, the vector can be wrapped into a `RefCell`, and use `borrow_mut` and `borrow` to access the vector. 
+
+The `borrow` method returns the smart pointer type `Ref<T>`, and `borrow_mut` returns the smart pointer type `RefMut<T>`. Both types implement `Deref`, so we can treat them like regular references.
+
+```rust
+struct MockMessenger {
+    // sent_messages: Vec<String>,
+    sent_messages: RefCell<Vec<String>>,
+}
+
+impl MockMessenger {
+    fn new() -> MockMessenger {
+        MockMessenger {
+            sent_messages: RefCell::new(vec![]),
+        }
+    }
+}
+impl Messenger for MockMessenger {
+    fn send(&self, message: &str) {
+        //self.sent_messages.push(String::from(message));
+        self.sent_messages.borrow_mut().push(String::from(message));
+    }
+}
+
+ #[test]
+fn it_sends_an_over_75_percent_warning_message() {
+    let mock_messenger = MockMessenger::new();
+    let mut limit_tracker = LimitTracker::new(&mock_messenger, 100);
+
+    limit_tracker.set_value(80);
+
+    // assert_eq!(mock_messenger.sent_messages.len(), 1);
+    assert_eq!(mock_messenger.sent_messages.borrow().len(), 1);
+}
+```
+
+# Having Multiple Owners of Mutable Data by Combining Rc<T> and RefCell<T>
+
+A common way to use `RefCell<T> `is in combination with `Rc<T>`. Recall that `Rc<T>` lets you have multiple owners of some data, but it only gives immutable access to that data. If you have an `Rc<T>` that holds a `RefCell<T>`, you can get a value that can have multiple owners and that you can mutate!
+
+
+
+```rust
+#[derive(Debug)]
+enum List {
+    Cons(Rc<RefCell<i32>>, Rc<List>),
+    Nil,
+}
+
+use crate::List::{Cons, Nil};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+fn main() {
+    let value = Rc::new(RefCell::new(5));
+
+    let a = Rc::new(Cons(Rc::clone(&value), Rc::new(Nil)));
+
+    let b = Cons(Rc::new(RefCell::new(3)), Rc::clone(&a));
+    let c = Cons(Rc::new(RefCell::new(4)), Rc::clone(&a));
+
+    *value.borrow_mut() += 10;
+
+    println!("a after = {:?}", a);
+    println!("b after = {:?}", b);
+    println!("c after = {:?}", c);
+}
+/*
+a after = Cons(RefCell { value: 15 }, Nil)
+b after = Cons(RefCell { value: 3 }, Cons(RefCell { value: 15 }, Nil))
+c after = Cons(RefCell { value: 4 }, Cons(RefCell { value: 15 }, Nil))
+*/
+```
 
 # Arc
 In Rust, Arc (short for Atomic Reference Counting) is a smart pointer used for shared ownership. It allows multiple owners to access the same data and manages memory deallocation through tracking reference counts. Arc is commonly used for data sharing in multi-threaded environments as it is thread-safe.
