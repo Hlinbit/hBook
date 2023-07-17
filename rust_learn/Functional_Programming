@@ -12,6 +12,65 @@ let add = |a, b| a + b + x;
 println!("{}", add(2,3));
 ```
 
+## Closure Type Inference and Annotation
+
+
+
+## Capturing References or Moving Ownership
+
+Closures can capture values from their environment in three ways, which directly map to the three ways a function can take a parameter: borrowing immutably, borrowing mutably, and taking ownership.
+
+This is an example for immutable reference:
+```rust
+fn main() {
+    let list = vec![1, 2, 3];
+    println!("Before defining closure: {:?}", list);
+
+    let only_borrows = || println!("From closure: {:?}", list);
+
+    println!("Before calling closure: {:?}", list);
+    only_borrows();
+    println!("After calling closure: {:?}", list);
+}
+```
+
+This is an example for mutable reference:
+```rust
+fn main() {
+    let mut list = vec![1, 2, 3];
+    println!("Before defining closure: {:?}", list);
+
+    let mut borrows_mutably = || list.push(4);
+    
+    // This line borrow an immutable reference to println.
+    // Howerver we have borrow a mutable reference to borrows_mutably.
+    // Rust forbiden there is any reference when a mutable reference exists.
+
+    // println!("Before calling closure: {:?}", list);
+    borrows_mutably();
+    println!("After calling closure: {:?}", list);
+}
+```
+
+If you want to force the closure to take ownership of the values it uses in the environment even though the body of the closure doesn’t strictly need ownership, you can use the move keyword before the parameter list.
+
+This technique is mostly useful when passing a closure to a new thread to move the data so that it’s owned by the new thread.
+
+```rust
+use std::thread;
+
+fn main() {
+    let list = vec![1, 2, 3];
+    println!("Before defining closure: {:?}", list);
+
+    thread::spawn(move || println!("From thread: {:?}", list))
+        .join()
+        .unwrap();
+}
+```
+
+The reason to move the ownership of list from main thread to new thread is that the new thread might finish before the rest of the main thread finishes, or the main thread might finish first. If the main thread maintained ownership of list but ended before the new thread did and dropped list, the immutable reference in the thread would be invalid. Therefore, the compiler requires that list be moved into the closure given to the new thread so the reference will be valid.
+
 ## Use Closure for Iterator
 
 Using closures in combination with iterators of containers can achieve the effect of traversing the entire container, which allows us to write more concise and elegant code.
