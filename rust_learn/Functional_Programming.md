@@ -14,6 +14,7 @@ println!("{}", add(2,3));
 
 ## Closure Type Inference and Annotation
 
+There are more differences between functions and closures. Closures don’t usually require you to annotate the types of the parameters or the return value like fn functions do. Type annotations are required on functions because the types are part of an explicit interface exposed to your users.
 
 Closures don’t usually require you to annotate the types of the parameters or the return value like fn functions do. Type annotations are required on functions because the types are part of an explicit interface exposed to your users. 
 
@@ -84,6 +85,17 @@ fn main() {
 ```
 
 The reason to move the ownership of list from main thread to new thread is that the new thread might finish before the rest of the main thread finishes, or the main thread might finish first. If the main thread maintained ownership of list but ended before the new thread did and dropped list, the immutable reference in the thread would be invalid. Therefore, the compiler requires that list be moved into the closure given to the new thread so the reference will be valid.
+
+# Three Closure Types
+
+A closure body can do any of the following: move a captured value out of the closure, mutate the captured value, neither move nor mutate the value, or capture nothing from the environment to begin with.
+
+- `FnOnce` applies to closures that can be called once. All closures implement at least this trait, because all closures can be called. A closure that moves captured values out of its body will only implement `FnOnce` and none of the other `Fn` traits, because it can only be called once.
+
+- `FnMut` applies to closures that don’t move captured values out of their body, but that might mutate the captured values. These closures can be called more than once.
+- 
+- `Fn` applies to closures that don’t move captured values out of their body and that don’t mutate captured values, as well as closures that capture nothing from their environment. These closures can be called more than once without mutating their environment, which is important in cases such as calling a closure multiple times concurrently.
+
 
 ## Use Closure for Iterator
 
@@ -165,6 +177,10 @@ where
 It takes a variable with type `FnMut(Self::Item) -> B`. Here, `Self::Item` refers to the type of element produced by the iterator that the map method is being called on. And `B` is inferred by rust compiler. If the closure return a variable with type `String`, `B` is `String`. In this example, `B` is `i32`.
 
 The closure `|x| x * x` is the input of `map()`. The closure is invoked in `map()` with each element in the `Vec` serving as input. The result `squares` is a new `Vec`, containing the square of each element.
+
+## Comparing Performance: Loops vs. Iterators
+
+Iterators, although a high-level abstraction, get compiled down to roughly the same code as if you’d written the lower-level code yourself. Iterators are one of Rust’s zero-cost abstractions, by which we mean using the abstraction imposes no additional runtime overhead. 
 
 # Use closure as a function input
 
