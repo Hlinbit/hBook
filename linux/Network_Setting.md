@@ -155,3 +155,31 @@ This command adds a rule to the OUTPUT chain of the mangle table. It matches TCP
 `-j MARK`: Specifies the action to be taken if the packet matches the conditions. In this case, it is MARK.
 
 `--set-mark 10`: Sets the packet mark value to 10.
+
+## IPTABLE
+
+iptables is a tool used to configure network packet filtering rules in the Linux kernel. It is one of the most commonly used firewall tools in Linux systems, allowing control over inbound and outbound network traffic.
+
+List all connection rules. 
+
+```bash
+iptables -L
+```
+
+Drop a connection.
+
+```bash
+iptables -A INPUT -s <source_ip> -d <destination_ip> -p <protocol> --sport <source_port> --dport <destination_port> -j DROP
+```
+
+For example:
+
+```bash
+iptables -A INPUT -s 127.0.0.1 -d 127.0.0.1 -p tcp --sport 7001 --dport 7070 -j DROP
+```
+
+Delete a rule in iptable.
+
+```bash
+iptables -D INPUT <rule_number>
+```

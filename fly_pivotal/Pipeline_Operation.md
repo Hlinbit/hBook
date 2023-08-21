@@ -15,3 +15,9 @@ fly -t <tag> destroy-pipeline -p <pipeline_name>
 ```
 fly -t <tag> gp -p <pipeline_name>
 ```
+
+# login a concourse container
+
+```
+fly -t <tag> hijack -u <url>
+```
