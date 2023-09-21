@@ -60,12 +60,3 @@ rabbitmqctl set_permissions -p vhost_gpss gpadmin ".*" ".*" ".*"
 rabbitmqctl set_permissions -p / gpadmin ".*" ".*" ".*"
 rabbitmqctl set_user_tags gpadmin administrator
 ```
-
-```sql
-CREATE TABLE stream_order (
-    pk INT,
-    seq INT,
-    data TEXT,
-    stream TEXT
-);
-```
