@@ -1,0 +1,14 @@
+# install
+
+[Download](https://www.anaconda.com/download)
+
+# Setup an environment
+
+```bash
+conda create -n <name> python=<version>
+conda activate <name>
+
+# Use the environment as a normal terminal
+
+pip install <lib_name>
+```
