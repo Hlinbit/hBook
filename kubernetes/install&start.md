@@ -49,9 +49,23 @@ kubectl describe [type] [name]
 # type: deployment, service, pod and so on.
 ```
 
+
+## Deployment
+
+```bash
+kubectl apply -f [yaml]
+
+# Check status of current deployments
+kubectl get deployments
+
+# detete deployments
+kubectl delete deployment [deploy-name]
+```
+
 ## Debug pod
 
 ```bash
+kubectl get pods 
 kubectl get pods -l app=[name]
 
 # output : pod name and status
@@ -59,4 +73,12 @@ kubectl get pods -l app=[name]
 kubectl describe pod [pod-name]
 
 # Detailed status information and error messages.
+
+kubectl exec -it [pod-name] -- /bin/bash
+
+# Login to pod and run bash
+
+kubectl exec -it [pod-name] -- [command]
+# Login to pod and run command
 ```
+

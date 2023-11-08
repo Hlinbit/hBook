@@ -1,0 +1,46 @@
+FROM quay.io/centos/centos:stream9
+
+RUN dnf -y update
+
+# 安装必要的工具
+RUN dnf -y install net-tools
+
+# 清理 DNF 缓存
+RUN dnf -y groupinstall "Development Tools" && \
+    dnf clean all
+
+RUN dnf install -y wget git xz-devel patch curl-devel cyrus-sasl-devel rpm-build sudo
+
+RUN useradd -rm -d /home/gpadmin -s /bin/bash -g root -G wheel -p "" -u 1000 gpadmin
+
+RUN rm -rf /usr/local/go
+ADD https://dl.google.com/go/go1.19.1.linux-amd64.tar.gz /
+RUN tar -C /usr/local -xzf /go1.19.1.linux-amd64.tar.gz
+# Build the ginkgo. We only need the binary
+ENV PATH="/usr/local/go/bin:/home/gpadmin/go/bin:${PATH}"
+
+USER gpadmin
+WORKDIR /home/gpadmin
+
+# Download from https://github.com/Kitware/CMake/releases/download/v3.17.3/cmake-3.17.3-Linux-x86_64.tar.gz
+COPY cmake-3.17.3-Linux-x86_64.tar.gz /home/gpadmin/
+RUN sudo tar xzf cmake-3.17.3-Linux-x86_64.tar.gz -C /opt/
+ENV PATH="/opt/cmake-3.17.3-Linux-x86_64/bin:${PATH}"
+
+# Download from https://github.com/greenplum-db/gpdb/releases
+COPY *.rpm /home/gpadmin/
+RUN sudo yum install -y *.rpm
+
+ENV \
+        GPDB_PREFIX=/usr/local/greenplum-db-devel \
+        PGPORT=15432 \
+        MASTER_BASE_DIR=/home/gpadmin/data/coordinator \
+        MASTER_DATA_DIRECTORY=/home/gpadmin/data/coordinator/gpseg-1 \
+        COORDINATOR_BASE_DIR=/home/gpadmin/data/coordinator \
+        COORDINATOR_DATA_DIRECTORY=/home/gpadmin/data/coordinator/gpseg-1 \
+        SEGMENT_BASE_DIR=/home/gpadmin/data/primary \
+        CC=gcc \
+        GPSS_SRC_PATH=/home/gpadmin/gpss_src \
+        LD_LIBRARY_PATH=
+
+ENTRYPOINT /bin/bash

@@ -23,30 +23,6 @@ sudo apt install python3-pip
 sudo yum install python-pip
 ```
 
-# Show all running docker container
-
-```bash
-docker ps
-```
-
-# Pause the running container
-
-```bash
-docker ps -q | xargs docker pause
-```
-
-# Stop a running container
-
-```bash
-docker stop <name>
-```
-
-# Stop all running containers
-
-```bash
-docker stop $(docker ps -aq)
-```
-
 # Using stream
 
 ```bash 
