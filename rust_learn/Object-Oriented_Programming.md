@@ -8,7 +8,7 @@ In Rust, a trait is a way to define shared behavior across types. It is similar 
 The example provided demonstrates the three elements that can be included within a Rust trait: method signatures, constant declarations, and type signatures (or associated types). Any elements in `trait` need to be defined in the implementing struct or enum. Failure to do so will result in a compilation error.
 
 
-```
+```rust
 trait Shape {
     type Unit;
     const PAI: f64;
