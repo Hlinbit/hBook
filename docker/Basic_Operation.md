@@ -34,3 +34,7 @@ docker stop $(docker ps -aq)
 ```bash
 docker ps
 ```
+
+```bash
+sudo usermod -aG docker $USER
+```

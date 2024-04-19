@@ -82,3 +82,9 @@ kubectl exec -it [pod-name] -- [command]
 # Login to pod and run command
 ```
 
+## Create config map
+
+```bash
+kubectl create configmap app-config --from-file=config.json
+```
+
