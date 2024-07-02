@@ -1,0 +1,33 @@
+# Solution 
+
+## Run pod as arbitrary user
+
+
+[UID and GID in openshift](https://www.redhat.com/en/blog/a-guide-to-openshift-and-uids)
+
+```bash
+oc create sa sa-with-anyuid
+oc adm policy add-scc-to-user anyuid -z sa-with-anyuid
+```
+
+## Use PVC to store the log files.
+
+- multi-pods vs one-pvc
+  We need specific file system to handle multiple sources.(NFS、GlusterFS、CephFS)
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: /path/to/nfs
+    server: nfs-server.example.com
+```
+
+- one-pod vs one-pvc

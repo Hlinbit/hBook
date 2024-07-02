@@ -36,3 +36,4 @@ rabbitmqctl set_permissions -p vhost_gpss gpadmin ".*" ".*" ".*"
 rabbitmqctl set_permissions -p / gpadmin ".*" ".*" ".*"
 rabbitmqctl set_user_tags gpadmin administrator
 ```
+368e32cd47c13f74de5d0c07dfb3551ca253689e

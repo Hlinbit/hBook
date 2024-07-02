@@ -38,3 +38,9 @@ docker ps
 ```bash
 sudo usermod -aG docker $USER
 ```
+
+# Save image as .tar
+
+```bash
+docker save -o myimage_latest.tar myimage:latest
+```

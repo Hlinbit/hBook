@@ -146,3 +146,6 @@ etcdctl --endpoints=$ENDPOINTS elect <election_name> <candidate name>
 etcdctl --write-out=table --endpoints=$ENDPOINTS endpoint status
 etcdctl --endpoints=$ENDPOINTS endpoint health
 ```
+
+# Start a etcd to server internally and externally
+etcd --data-dir /tmp/etcd/logs  --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://{HOSTNAME}:2379
