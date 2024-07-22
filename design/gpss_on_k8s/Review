@@ -1,0 +1,86 @@
+# Process
+
+- Build the environment
+- Choose technical route
+- Build a simple demo
+- Test the core function
+- Solve the problems
+- How & When & What should we refer to other excellent projects?
+
+## Build the environment
+
+What & How to build?
+
+- Official Doc. Chinese Network Unreachable.
+- Best practice.  GCP, AWS, Azure, Vsphere.
+- Customer demand. Openshift
+
+What should we consider when building our environment?
+
+Factors we need to consider:
+
+- Feasibility
+- Time
+- Money 
+- Autonomy
+- Convenience
+
+How to find help?
+- Ask for help from your organization
+- Sales men
+- Technology Forum 
+
+## Choose technical route
+
+- Have a full understanding of the existing environment and dependencies.
+  - Experiment
+  - Doc
+- Ask someone with experience.
+  - How to find these people?
+    - Technology Forum   github? stack overflow? Bilibili? Youtube?
+
+## Build a simple demo
+- Refer to official documentation
+  - Focus on main functions rather than pursuing everything.
+- Video tutorials may speed up the process. Youtube
+
+## Problem
+
+- Bug. Simplest case
+- Requirement. For example: Secret.
+- implementation method. Pod VS Deployment? Number VS Tag?
+- No need to solve. Lastest tag in image url.
+
+Solution ideas:
+
+- Just fix the real Bug. 
+- Develop necessary requirements encountered during testing.
+- Demands can also come from references to a mature solution.
+
+- Don't know how to implement?
+  - Design by yourself. It must be based on a full understanding of existing programs and paradigms.
+  - Refering Mature solution
+  - Nothing to refer?
+    - The solution should conform to conventional usage as much as possible.
+    - Compared with the advantages, we need to strictly examine the shortcomings of the plan, and the shortcomings are the key to plan selection.
+
+## What & How & When should we refer to other excellent projects?
+
+### What
+What can we get?
+
+- Technical route and framework.
+- Common demands in the industry.
+- Best practices for implementation.
+
+### How
+
+- Read code with purpose. 
+  - This means that we need to complete the implementation of a basic function and then look at the code with questions.
+- Read error handling logics is helpful.
+
+### When
+
+- When you don't know how to implement.
+- When you don't know what to do
+- When you don't sure whether there is need to do.
