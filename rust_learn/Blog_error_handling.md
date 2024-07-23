@@ -123,7 +123,7 @@ enum MyError {
 }
 ```
 
-在这里，我们借助了`thiserror`这个第三方库。这个错误中，我们覆盖了找不到文件，权限不足和其他错误。在代码中我们可以通过`map_err`来捕获返回的error，并将其映射到我们自定义的error上。具体操作如下：
+在这里，我们借助了`thiserror`这个第三方库。这个错误中，我们覆盖了找不到文件，权限不足和其他错误。在代码中我们可以通过`map_err`来捕获返回的error，并将其映射到我们自定义的error上。具体代码如下：
 
 ```rust
 fn map_io_err (err: std::io::Error, name: String) -> MyError {
@@ -149,4 +149,29 @@ fn read_file_contents(filename: &str) -> Result<String, MyError> {
 
 它接受一个一次性的闭包，这个闭包的将一个`Err`映射为另一个`Err`。在上面的例子中这个闭包是`|e| map_io_err(e, String::from(filename))`。这个闭包捕捉错误`e`，并调用错误映射函数`map_io_err`。`map_io_err`函数将错误`e`结合文件名`filename`，生成新的`MyError`。
 
+通过这样的方式，我们将`io::Error`映射为了`MyError`，通过`thiserror`能力，我们简化了`MyError`的定义。也许你会问这样的定义有什么意义？
 
+第一点：当我们写一个比较复杂的函数时，其过程中可能产生的错误类型是各式各样的，通过`map_err`和定制的统一的error类型，我们可以提供统一的返回类型。同时正如前面讲到的那样，依赖库产生的错误可能是用户不友好的。通过定制用户更加友好的error，可以减少系统查错的难度。
+
+## 如何在错误时直接退出
+
+最后我们讲一下如何在发生错误时直接退出。
+
+按照C语言的风格我们应该这样写：
+
+```rust
+if let Ok(mut file) = File::open(filename) {
+    // ....
+} else {
+    std::process::exit(1);
+}
+```
+
+rust提供`expect`方法，这是一种简洁而强大的方式，可以在处理 Result 和 Option 类型时提供有用的错误信息并立即终止程序。除了报错信息，它还可以提供整个调用栈，帮助我们快速定位错误信息和位置。
+
+如下面这个例子，当`File::open(filename)`出现错误，程序将会直接退出，并打印出调用栈和错误信息，帮助我们定位问题。
+```rust
+File::open(filename).expect("Failed to open file");
+```
+
+这样的处理方式典型的一个应用场景是：程序初始化配置错误时直接报错退出。
