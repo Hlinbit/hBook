@@ -19,11 +19,13 @@ The design considerations are as follows:
 
 # How to use GPSS cluster on Kubernetes 
 
+## Preparation for Deploying a Cluster
+
 Before using the GPSS cluster on Kubernetes, we need to perform some configuration and checks. This mainly includes two aspects:
 - Grant Pod Subnet Access to GPDB
 - Kubernetes Cluster Firewall Settings
 
-## Grant Pod Subnet Access to GPDB
+### Grant Pod Subnet Access to GPDB
 
 Because GPSS needs to operate the GPDB database via psql, we must add the following record to the pg_hba.conf file in the coordinator directory:
 
@@ -34,7 +36,7 @@ host     all       {User}       {Pod Network CIDR}    trust
 Grant GPSS instances the ability to operate the GPDB cluster.
 
 
-## Kubernetes Cluster Firewall Settings
+### Kubernetes Cluster Firewall Settings
 
 Firewall rules are crucial in determining whether GPDB and GPSS can communicate with each other. Since deploying a GPDB cluster within a Kubernetes environment is challenging, it is almost certain that GPDB will need to access GPSS instances from outside the Kubernetes cluster. 
 
@@ -46,17 +48,17 @@ From the Kubernetes perspective, there are two scenarios:
 
 From the perspective of GPDB, we need to open the Psql access port on the Coordinator host's firewall configuration to allow access from the GPSS instances.
 
-# Deploy the GPSS operator on Kubernetes
+## Deploy the GPSS operator on Kubernetes
 
-The GPSS operator provides a way to deploy the operator container in Kubernetes using Helm. After obtaining the Helm package, you can deploy it using  `helm install`. Users can customize the operator's image address, image pull policy, and related resource names by defining them in the values.yaml file of the Helm package.
+The GPSS operator provides a way to deploy the operator container in Kubernetes using Helm. After obtaining the Helm package, you can deploy it using  `helm install`. Users can customize the operator's image address, image pull policy, and related resource names by defining them in the `values.yaml` file of the Helm package.
 
 Note two typical scenarios here.
 
-## Network unavailable
+### Network unavailable
 
-When external network access is not available, we can still deploy the operator using Helm. First, download the official operator image and distribute it to the local Docker environment of the Kubernetes cluster. Then, in the values.yaml file of the Helm package, change the pullPolicy variable to IfNotPresent or Never. This way, the deployment image can be retrieved from the local Docker.
+When external network access is not available, we can still deploy the operator using Helm. First, download the official operator image and distribute it to the local Docker environment of the Kubernetes cluster. Then, in the `values.yaml` file of the Helm package, change the pullPolicy variable to IfNotPresent or Never. This way, the deployment image can be retrieved from the local Docker.
 
-## Private authorization information
+### Private authorization information
 
 Some customers, for information security reasons, store images in a private repository. This means that we need to provide special authentication information to pull the images. In the values.yaml file of the Helm package, we support specifying the name of a secret containing the authentication information, allowing Kubernetes to pull images from the repository.
 
@@ -64,13 +66,13 @@ Some customers, for information security reasons, store images in a private repo
 
 The CRD `gpsscluster` is used to define the resource type for a GPSS cluster on Kubernetes. It contains the following fields:
 
-- size: define the number of instances in the cluster.
-- image: define the GPSS image link.
-- service: Define the types of GPSS and Gpfdist services in the cluster.
+- size: define the number of instances in the cluster. Its value must be greater than or equal to 0.
+- image: define the GPSS image. For images from a remote repository, it is the image URL with tag. For local images, it is image name with tag.
+- service: Define the types of GPSS and Gpfdist services in the cluster, including `LoadBalancer`, `ClusterIP`, and `NodePort`.
 - resources: Define the resource requests and limits for each GPSS instance when it is created.
-- pull_policy: The policy for pulling the GPSS image, including Always, IfNotPresent, and Never.
-- pull_secret: The name of the secret containing the authentication information for pulling the GPSS image.
-- gpss_config: GPSS instance startup configuration in JSON format. For details, please refer to the GPSS documentation.
+- pull_policy: The policy for pulling the GPSS image, including `Always`, `IfNotPresent`, and `Never`.
+- pull_secret: The name of the secret containing the authentication information for pulling the GPSS image. 
+- gpss_config: GPSS instance startup configuration in JSON format. For details, please refer to the [GPSS documentation](https://docs.vmware.com/en/VMware-Greenplum-Streaming-Server/index.html).
 
 ```yaml
 apiVersion: gpss.gpdb.io/v1
@@ -112,3 +114,38 @@ spec:
       }
     }
 ```
+
+# Cluster Configuration in Detail
+
+### Update or Rollback the Container Image
+
+By changing the image field of the `GpssCluster`, we can achieve cluster updates and rollbacks.
+
+### Change the Cluster Size
+
+By changing the `size` field of the `GpssCluster`, we can achieve cluster scaling in and out.
+
+### Provide Authentication Information for Pulling GPSS Image
+
+When we need to fetch the GPSS image from a remote repository, Kubernetes needs permission to pull the image from the repository. Customers can specify a secret containing the authentication information in the `pull_secret` field of the `GpssCluster` to ensure that the operator can successfully create the GPSS cluster.
+
+### Define the Policy to Pull the GPSS Image
+
+The GPSS operator supports users in pulling the GPSS image from either local or remote sources. If the Kubernetes cluster cannot reach the remote image repository, you can set the `pull_policy` field to `Never`. This way, the operator will fetch the image from the Docker environment within the Kubernetes cluster to complete the cluster build.
+
+### Define Computational Resources for the GPSS Container
+
+`GpssCluster` supports defining the resource usage of each instance in the cluster through the resources field. The format of resources is exactly the same as the format used by Kubernetes to define resources. For more details, you can refer to the Kubernetes documentation. The default settings are: 2GB of memory and 2 CPU cores at startup. The resource limits are 16GB of memory and 8 CPU cores.
+
+### Define Service Type of GPSS and Gpfdist
+
+`GpssCluster` supports users in defining the types of the GPSS service and the Gpfdist service. Since it is difficult to deploy GPDB in Kubernetes, providing a service for GPDB to access GPSS instances is crucial. In the operator, we support three types of services: `LoadBalancer`, `ClusterIP`, and `NodePort`. The default service type is `LoadBalancer`, and users can define the service type according to their needs.
+
+# Interaction between Gpsscli and the Cluster on Kubernetes
+
+`gpsscli` is the official tool for managing data flow jobs in GPSS clusters on Kubernetes. `gpsscli` needs to access the GPSS on Kubernetes cluster through the GPSS service. This means that when using gpsscli, the user must specify `--gpss-host` as the IP or hostname of the GPSS service, and `--gpss-port` as the port exposed by the service.
+
+Regardless of what type of service is defined, the GPSS service is named in the format "`{namespace}-{name}-gpss-service`". `{namespace}` refers to the namespace where the GpssOperator is located, and `{name}` is the user-defined name of the GpssOperator.
+
+
+Therefore, you can obtain the information of the GPSS service through kubectl or the visual panel on the cloud service.
